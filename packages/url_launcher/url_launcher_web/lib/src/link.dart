@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -512,9 +514,11 @@ class LinkViewController extends PlatformViewController {
   /// It also handles logic for external vs internal links, triggered by a mouse
   /// vs keyboard event.
   static void _triggerLink(int viewId, html.MouseEvent? mouseEvent) {
+    print('[url_launcher_web] Triggered link on viewId $viewId');
     final LinkViewController controller = _instancesByViewId[viewId]!;
 
     if (mouseEvent != null && _isModifierKey(mouseEvent)) {
+      print('[url_launcher_web] Valid mouse event, also modifier key, aborting to let browser handle it');
       // When the click is accompanied by a modifier key (e.g. cmd+click or
       // shift+click), we want to let the browser do its thing (e.g. open a new
       // tab or a new window).
@@ -523,21 +527,27 @@ class LinkViewController extends PlatformViewController {
 
     if (controller._isExternalLink) {
       if (mouseEvent == null) {
+        print('[url_launcher_web] External link, triggered by keyboard. Launching URL manually');
         // When external links are triggered by keyboard, they are not handled by
         // the browser. So we have to launch the url manually.
         UrlLauncherPlatform.instance
             .launchUrl(controller._uri.toString(), const LaunchOptions());
       }
 
+      print('[url_launcher_web] External link triggered by mouse event. Aborting to let browser handle it');
+
       // When triggerd by a mouse event, external links will be handled by the
       // browser, so we don't have to do anything.
       return;
     }
 
+    print('[url_launcher_web] Preventing mouse event, Flutter navigation will handle it');
+
     // Internal links are pushed through Flutter's navigation system instead of
     // letting the browser handle it.
     mouseEvent?.preventDefault();
     final String routeName = controller._uri.toString();
+    print('[url_launcher_web] Pushing $routeName through Flutter navigation');
     pushRouteToFrameworkFunction(routeName);
   }
 
