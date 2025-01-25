@@ -256,12 +256,16 @@ class LinkViewController extends PlatformViewController {
   }
 
   void _onDomKeydown() {
+    print('[url_launcher_web] Triggered _onDomKeydown on viewId $viewId');
+
     assert(
       _hitTestedViewId == viewId,
       'Keydown event should only be handled by the hit tested Link',
     );
 
     if (_isExternalLink) {
+      print('[url_launcher_web] isExternalLink, manually launching url');
+
       // External links are not handled by the browser when triggered via a
       // keydown, so we have to launch the url manually.
       UrlLauncherPlatform.instance
@@ -269,16 +273,20 @@ class LinkViewController extends PlatformViewController {
       return;
     }
 
+
     // A uri that doesn't have a scheme is an internal route name. In this
     // case, we push it via Flutter's navigation system instead of using
     // `launchUrl`.
     final String routeName = _uri.toString();
+    print('[url_launcher_web] Pushing route $routeName to Flutter navigation. URI: $_uri');
     pushRouteNameToFramework(null, routeName);
   }
 
   void _onDomClick(html.MouseEvent event) {
+    print('[url_launcher_web] Triggered _onDomClick on viewId $viewId');
     final bool isHitTested = _hitTestedViewId == viewId;
     if (!isHitTested) {
+      print('[url_launcher_web] Click landed on anchor element but not on the underlying widget. Preventing browser and aborting.');
       // There was no hit test registered for this click. This means the click
       // landed on the anchor element but not on the underlying widget. In this
       // case, we prevent the browser from following the click.
@@ -287,6 +295,7 @@ class LinkViewController extends PlatformViewController {
     }
 
     if (_isExternalLink) {
+      print('[url_launcher_web] isExternalLink, manually launching url');
       // External links will be handled by the browser, so we don't have to do
       // anything.
       return;
@@ -297,6 +306,7 @@ class LinkViewController extends PlatformViewController {
     // browser handle it.
     event.preventDefault();
     final String routeName = _uri.toString();
+    print('[url_launcher_web] Pushing route $routeName to Flutter navigation. URI: $_uri');
     pushRouteNameToFramework(null, routeName);
   }
 
