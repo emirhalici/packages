@@ -281,14 +281,6 @@ class LinkViewController extends PlatformViewController {
       return;
     }
 
-    // fixes https://github.com/flutter/flutter/issues/103118 on 6.3.1
-    if (_isModifierKey(event)) {
-      // When the click is accompanied by a modifier key (e.g. cmd+click or
-      // shift+click), we want to let the browser do its thing (e.g. open a new
-      // tab or a new window).
-      return;
-    }
-
     if (_isExternalLink) {
       // External links will be handled by the browser, so we don't have to do
       // anything.
