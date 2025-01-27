@@ -83,12 +83,10 @@ class WebLinkDelegateState extends State<WebLinkDelegate> {
                 ..setUri(widget.link.uri)
                 ..setTarget(widget.link.target);
             },
-            surfaceFactory:
-                (BuildContext context, PlatformViewController controller) {
+            surfaceFactory: (BuildContext context, PlatformViewController controller) {
               return PlatformViewSurface(
                 controller: controller,
-                gestureRecognizers: const <Factory<
-                    OneSequenceGestureRecognizer>>{},
+                gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
                 hitTestBehavior: PlatformViewHitTestBehavior.transparent,
               );
             },
@@ -113,8 +111,7 @@ class LinkViewController extends PlatformViewController {
       //
       // To ensure we always receive the event even if the engine calls
       // `stopPropagation`.
-      html.window
-          .addEventListener('keydown', _jsGlobalKeydownListener, _useCapture);
+      html.window.addEventListener('keydown', _jsGlobalKeydownListener, _useCapture);
       html.window.addEventListener('click', _jsGlobalClickListener);
     }
     _instances[viewId] = this;
@@ -139,8 +136,7 @@ class LinkViewController extends PlatformViewController {
     return controller;
   }
 
-  static final Map<int, LinkViewController> _instances =
-      <int, LinkViewController>{};
+  static final Map<int, LinkViewController> _instances = <int, LinkViewController>{};
 
   static html.Element _viewFactory(int viewId) {
     return _instances[viewId]!._element;
@@ -264,8 +260,7 @@ class LinkViewController extends PlatformViewController {
     if (_isExternalLink) {
       // External links are not handled by the browser when triggered via a
       // keydown, so we have to launch the url manually.
-      UrlLauncherPlatform.instance
-          .launchUrl(_uri.toString(), const LaunchOptions());
+      UrlLauncherPlatform.instance.launchUrl(_uri.toString(), const LaunchOptions());
       return;
     }
 
@@ -283,6 +278,14 @@ class LinkViewController extends PlatformViewController {
       // landed on the anchor element but not on the underlying widget. In this
       // case, we prevent the browser from following the click.
       event.preventDefault();
+      return;
+    }
+
+    // fixes https://github.com/flutter/flutter/issues/103118 on 6.3.1
+    if (_isModifierKey(event)) {
+      // When the click is accompanied by a modifier key (e.g. cmd+click or
+      // shift+click), we want to let the browser do its thing (e.g. open a new
+      // tab or a new window).
       return;
     }
 
@@ -360,8 +363,7 @@ class LinkViewController extends PlatformViewController {
     _instances.remove(viewId);
     if (_instances.isEmpty) {
       html.window.removeEventListener('click', _jsGlobalClickListener);
-      html.window.removeEventListener(
-          'keydown', _jsGlobalKeydownListener, _useCapture);
+      html.window.removeEventListener('keydown', _jsGlobalKeydownListener, _useCapture);
     }
     await SystemChannels.platform_views.invokeMethod<void>('dispose', viewId);
   }
@@ -398,7 +400,17 @@ html.Element? getLinkElementFromTarget(html.Event event) {
 /// Checks if the given [element] is a link that was created by
 /// [LinkViewController].
 bool isLinkElement(html.Element? element) {
-  return element != null &&
-      element.tagName == 'A' &&
-      element.hasProperty(linkViewIdProperty.toJS).toDart;
+  return element != null && element.tagName == 'A' && element.hasProperty(linkViewIdProperty.toJS).toDart;
+}
+
+bool _isModifierKey(html.Event event) {
+  // This method accepts both KeyboardEvent and MouseEvent but there's no common
+  // interface that contains the `ctrlKey`, `altKey`, `metaKey`, and `shiftKey`
+  // properties. So we have to cast the event to either `KeyboardEvent` or
+  // `MouseEvent` to access these properties.
+  //
+  // It's safe to cast both event types to `KeyboardEvent` because it's just
+  // JS-interop and has no concrete runtime type.
+  event as html.KeyboardEvent;
+  return event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
 }
