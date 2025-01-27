@@ -404,13 +404,17 @@ bool isLinkElement(html.Element? element) {
 }
 
 bool _isModifierKey(html.Event event) {
-  // This method accepts both KeyboardEvent and MouseEvent but there's no common
-  // interface that contains the `ctrlKey`, `altKey`, `metaKey`, and `shiftKey`
-  // properties. So we have to cast the event to either `KeyboardEvent` or
-  // `MouseEvent` to access these properties.
-  //
-  // It's safe to cast both event types to `KeyboardEvent` because it's just
-  // JS-interop and has no concrete runtime type.
-  event as html.KeyboardEvent;
-  return event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+  try {
+    // This method accepts both KeyboardEvent and MouseEvent but there's no common
+    // interface that contains the `ctrlKey`, `altKey`, `metaKey`, and `shiftKey`
+    // properties. So we have to cast the event to either `KeyboardEvent` or
+    // `MouseEvent` to access these properties.
+    //
+    // It's safe to cast both event types to `KeyboardEvent` because it's just
+    // JS-interop and has no concrete runtime type.
+    event as html.KeyboardEvent;
+    return event.ctrlKey || event.altKey || event.metaKey || event.shiftKey;
+  } catch (e) {
+    return false;
+  }
 }
